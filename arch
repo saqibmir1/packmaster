@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# package manager script for arch linux
+# Dependencies: fzf
+
+
+action=$(echo -e "Install Program\nRemove Program\nRemove Orphans\nUpdate System (pacman only)\nUpdate System (pacman + yay)" | fzf -i --height 10)
+
+case $action in
+  "Install Program")
+    package=$(pacman -Si |
+      awk '/^Name/{name=$3} /^Download Size/{ds=$4$5} /^Repo/{repo=$3} /^Description/{sub(/^.{18}/,"", $0); print name, "["ds"]", "("repo") =>", $0} ' |
+      sort -d | fzf --height 10 | awk '{print $1}')
+
+    sudo pacman -S --noconfirm $package && echo "Package installed"
+    ;;
+
+  "Remove Program")
+    package=$(pacman -Qi |
+      awk '/^Name/{name=$3} /^Installed Size/{ds=$4$5} /^Repo/{repo=$3} /^Description/{sub(/^.{18}/,"", $0); print name, "["ds"] =>", $0} ' |
+      sort -d | fzf --height 10 | awk '{print $1}')
+    sudo pacman -R --noconfirm $package && echo "Package removed"
+    ;;
+
+  "Remove Orphans")
+    sudo pacman -Rs $(pacman -Qqtd) 2>/dev/null && echo "Removed orphans" || echo "No Orphan packages found"
+    ;;
+
+  "Update System (pacman only)")
+    sudo pacman -Syu --noconfirm && echo "Updated system" || echo "Something went wrong"
+    ;;
+
+  "Update System (pacman + yay)")
+    yay && echo "Updated system" || echo "Something went wrong"
+    ;;
+  *)
+   echo "No option selected" 
+    ;;
+
+esac

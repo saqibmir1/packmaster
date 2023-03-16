@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Package manager script for ubuntu and ubuntu based distros (for linux brainlets)
+# dependencies: fzf
+
+action=$(echo -e "Install Package\nRemove Package\nRemove Unused Dependencies\nUpdate System" | fzf -i --height 10)
+
+case $action in
+  "Install Package")
+    package=$(apt-cache search . | awk '{print $1}' | sort | fzf --height 10)
+    sudo apt-get install -y $package && echo "Package installed"
+    ;;
+
+  "Remove Package")
+    package=$(dpkg --get-selections | awk '{print $1}' | sort | fzf --height 10)
+    sudo apt-get remove -y $package && echo "Package removed"
+    ;;
+
+  "Remove Unused Dependencies")
+    sudo apt-get autoremove -y && echo "Removed unused dependencies"
+    ;;
+
+  "Update System")
+    sudo apt-get update && sudo apt-get upgrade -y && echo "Updation completed" || echo "Something went wrong"
+    ;;
+  *)
+    echo "No Option Selected"
+    ;;
+
+esac
