@@ -1,9 +1,29 @@
 #!/bin/bash
-
+# Author: Saqib Mir
 # Package manager script for ubuntu and ubuntu based distros (for linux brainlets)
-# dependencies: fzf
+# Required Dependencies: fzf
+# Optional Dependencies: netselect-apt
 
-action=$(echo -e "Install Package\nRemove Package\nRemove Unused Dependencies\nUpdate System" | fzf -i --height 10)
+# dependency check
+if ! command -v fzf &> /dev/null; then
+	read -p "fzf is not installed. Do you want to isntall it? [y/n]: " choice
+	case "$choice" in
+		y|Y ) sudo apt-get install fzf -y;;
+		n|N ) exit;;
+		*) echo "Invalid Choice, Exiting..."; exit;;
+	esac
+fi
+
+if ! command -v netselect-apt &> /dev/null; then
+    read -p "expac is not installed. Do you want to install it? [y/n]: " choice
+    case "$choice" in
+        y|Y ) sudo apt-get install netselect-apt;;
+        n|N ) exit;;
+        * ) echo "Invalid choice. Exiting..."; exit;;
+    esac
+fi
+
+action=$(echo -e "Install Package\nRemove Package\nRemove Unused Dependencies\nUpdate System\nGenerate New Mirrorlist\n Generate New Mirrorlist And Use It\nFix Broken Packages" | fzf -i --height 10)
 
 case $action in
   "Install Package")
@@ -23,6 +43,19 @@ case $action in
   "Update System")
     sudo apt-get update && sudo apt-get upgrade -y && echo "Updation completed" || echo "Something went wrong"
     ;;
+
+  "Generate New Mirrorlist")
+    sudo netselect-apt > sources.list.fastest && echo "New mirrorlist stored n sources.list.fastest" || echo "Something went wrong"
+    ;;
+
+  "Generate New Mirrorlist And Use It")
+    sudo netselect-apt > sources.list.fastest && sudo mv sources.list sources.list.backu && sudo mv sources.list.fastest sources.list
+    ;;
+
+  "Fix Broken Packages")
+    sudo apt --fix-missing update && sudo apt update && sudo apt install -y
+    ;;
+
   *)
     echo "No Option Selected"
     ;;
